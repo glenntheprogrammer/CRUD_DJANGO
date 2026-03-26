@@ -1,0 +1,123 @@
+ {% load static %}
+ <!-- Main Sidebar Container -->
+<style type="text/css">
+<style type="text/css">
+.nav-sidebar .nav-link {
+    position: relative;
+    transition: background 0.2s ease;
+}
+
+/* Purple left bar */
+.nav-sidebar .nav-link::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 4px;
+    background: purple;   /* changed from orange */
+    border-radius: 0 3px 3px 0;
+
+    transform: scaleY(0);
+    transform-origin: top;
+    transition: transform 0.25s ease;
+}
+
+/* Show purple bar on hover & active */
+.nav-sidebar .nav-link.active::before,
+.nav-sidebar .nav-link:hover::before {
+    transform: scaleY(1);
+}
+
+/* SUPER LIGHT PURPLE GRADIENT */
+.nav-sidebar .nav-link:hover,
+.nav-sidebar .nav-link.active {
+    background: linear-gradient(
+        to right,
+        rgba(128, 0, 128, 0.05),   /* extremely light purple */
+        rgba(128, 0, 128, 0.01)    /* almost invisible */
+    ) !important;
+    box-shadow: none !important;
+}
+
+/* Submenu items same gradient */
+.nav-treeview .nav-link:hover,
+.nav-treeview .nav-link.active {
+    background: linear-gradient(
+        to right,
+        rgba(128, 0, 128, 0.05),
+        rgba(128, 0, 128, 0.01)
+    ) !important;
+    box-shadow: none !important;
+}
+
+/* Sidebar links text and icons in dark mode */
+body.dark-mode .main-sidebar .nav-link {
+    color: #fff !important;
+}
+
+body.dark-mode .main-sidebar .nav-link p {
+    color: #fff !important;
+}
+
+body.dark-mode .main-sidebar .nav-icon {
+    color: #fff !important;
+}
+
+/* Active or hovered link */
+body.dark-mode .main-sidebar .nav-link.active,
+body.dark-mode .main-sidebar .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+}
+</style>
+
+<aside class="main-sidebar sidebar-light-light elevation-3" id="mainSidebar">
+
+    <div class="brand-link bg-purple" id="brandLink" 
+         style="cursor: default; border-bottom: 1px rgba(255, 255, 255);">
+        <img src="{% static 'img/systemlogo.jpg' %}" 
+             alt="Logo" 
+             class="brand-image img-circle elevation-3" 
+             style="opacity: .8">
+        <span class="brand-text font-weight-light" style="color: white">
+            SMART CRUD
+        </span>
+    </div>
+
+    <div class="sidebar">
+        <nav class="mt-2">
+            <ul class="nav nav-pills nav-sidebar flex-column" 
+                data-widget="treeview" role="menu" data-accordion="false">
+
+                <!-- Dashboard -->
+                <li class="nav-item mt-2">
+                    <a href="{% url 'dashboard' %}" 
+                       class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                        <i class="nav-icon fas fa-tachometer-alt"></i>
+                        <p>Dashboard</p>
+                    </a>
+                </li>
+
+                <!-- Profiles -->
+                <li class="nav-item">
+                    <a href="{% url 'profile_list' %}" 
+                       class="nav-link {% if request.resolver_match.url_name == 'profile_list' %}active{% endif %}">
+                        <i class="nav-icon fas fa-user"></i>
+                        <p>Profiles</p>
+                    </a>
+                </li>
+
+                <!-- Users -->
+                <li class="nav-item">
+                    <a href="{% url 'user_list' %}" 
+                       class="nav-link {% if request.resolver_match.url_name == 'user_list' %}active{% endif %}">
+                        <i class="nav-icon fas fa-user-lock"></i>
+                        <p>User Accounts</p>
+                    </a>
+                </li>
+
+            </ul>
+        </nav>
+    </div>
+
+</aside>

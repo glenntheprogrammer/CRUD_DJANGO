@@ -1,0 +1,251 @@
+{% extends "layout/base.html" %}
+{% load static %}
+{% block content %}
+
+<div class="content-wrapper">
+  <section class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1>Profile Management</h1>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="#">Home</a></li>
+            <li class="breadcrumb-item active">User List</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="content">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title mt-2">List of Profiles</h3>
+              <div class="float-right">
+                <button type="button" class="btn btn-md btn-primary" id="addProfileBtn">
+                  <i class="fa fa-plus-circle"></i> Add New
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <table id="example1" class="table table-bordered table-striped">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Address</th>
+                    <th>Birthday</th>
+                    <th width="150">Actions</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ================= MODAL ================= -->
+<div class="modal fade" id="profileModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Profile Form</h5>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <form id="profileForm">
+          <input type="hidden" id="profile_id">
+
+          <div class="form-group">
+            <label>Name</label>
+            <input type="text" id="name" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label>Address</label>
+            <input type="text" id="address" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label>Birthday</label>
+            <input type="date" id="bday" class="form-control" required>
+          </div>
+
+          <div class="modal-footer px-0">
+            <button type="submit" class="btn btn-primary">
+              <i class="fa fa-save"></i> Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{% block extra_js %}
+<script>
+  $(document).ready(function(){
+
+    // CSRF
+    function getCookie(name){
+      let cookieValue = null;
+      if(document.cookie){
+        const cookies = document.cookie.split(';');
+        for(let cookie of cookies){
+          cookie = cookie.trim();
+          if(cookie.startsWith(name + '=')){
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+
+    $.ajaxSetup({
+      headers: { "X-CSRFToken": getCookie("csrftoken") }
+    });
+
+    // TOAST FUNCTION
+    function showToast(title, message, type="success") {
+
+      let bgClass = "bg-success";
+
+      if (type === "error") bgClass = "bg-danger";
+      if (type === "warning") bgClass = "bg-warning";
+      if (type === "info") bgClass = "bg-info";
+
+      let toast = `
+      <div class="toast ${bgClass} text-white" role="alert" data-delay="3000">
+      <div class="toast-header">
+      <strong class="mr-auto">${title}</strong>
+      <button type="button" class="ml-2 mb-1 close" data-dismiss="toast">&times;</button>
+      </div>
+      <div class="toast-body">${message}</div>
+      </div>
+      `;
+
+      $("#toast-container").append(toast);
+      $('.toast').toast({ delay: 3000 }).toast('show');
+
+      $('.toast').on('hidden.bs.toast', function () {
+        $(this).remove();
+      });
+    }
+
+    // DATATABLE
+    var table = $("#example1").DataTable({
+      ajax: {
+        url: "{% url 'list_ajax' %}",
+        dataSrc: "data"
+      },
+      paging: true,
+      lengthChange: true,
+      searching: true,
+      ordering: true,
+      info: true,
+      autoWidth: false,
+      responsive: true,
+      columns: [
+      {
+        data: null,
+        render: function(data, type, row, meta){
+          return meta.row + 1;
+        }
+      },
+      { data: "name" },
+      { data: "address" },
+      { data: "bday" },
+      {
+        data: null,
+        render: function(){
+          return `
+          <button class="btn btn-sm btn-warning editBtn">
+          <i class="far fa-edit"></i> Edit
+          </button>
+          <button class="btn btn-sm btn-danger deleteBtn">
+          <i class="fas fa-trash-alt"></i> Delete
+          </button>
+          `;
+        }
+      }
+      ]
+    });
+
+    // ADD
+    $("#addProfileBtn").click(function(){
+      $("#profileForm")[0].reset();
+      $("#profile_id").val('');
+      $("#profileModal").modal('show');
+    });
+
+    // EDIT
+    $("#example1").on("click", ".editBtn", function(){
+      var data = table.row($(this).parents("tr")).data();
+      var url = "{% url 'get_ajax' 0 %}".replace("0", data.id);
+
+      $.get(url, function(response){
+        $("#profile_id").val(response.id);
+        $("#name").val(response.name);
+        $("#address").val(response.address);
+        $("#bday").val(response.bday);
+        $("#profileModal").modal("show");
+      }).fail(function(){
+        showToast("Error", "Failed to load profile.", "error");
+      });
+    });
+
+    // DELETE
+    $("#example1").on("click", ".deleteBtn", function(){
+      var data = table.row($(this).parents("tr")).data();
+      var url = "{% url 'delete_ajax' 0 %}".replace("0", data.id);
+
+      if(confirm("Delete this profile?")){
+        $.post(url)
+        .done(function(){
+          table.ajax.reload();
+          showToast("Deleted", "Profile deleted successfully!", "success");
+        })
+        .fail(function(){
+          showToast("Error", "Cannot delete profile.", "error");
+        });
+      }
+    });
+
+    // SAVE (CREATE + UPDATE)
+    $("#profileForm").submit(function(e){
+      e.preventDefault();
+
+      $.post("{% url 'save_ajax' %}", {
+        id: $("#profile_id").val(),
+        name: $("#name").val(),
+        address: $("#address").val(),
+        bday: $("#bday").val(),
+      })
+      .done(function(){
+        $("#profileModal").modal("hide");
+        table.ajax.reload();
+        showToast("Success", "Profile saved successfully!", "success");
+      })
+      .fail(function(){
+        showToast("Error", "Failed to save profile.", "error");
+      });
+    });
+
+  });
+</script>
+{% endblock %}
+
+{% endblock %}
